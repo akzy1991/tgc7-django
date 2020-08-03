@@ -38,7 +38,7 @@ def add_to_cart(request, book_id):
 
 def view_cart(request):
     # loading the content of the 'shopping_cart' from the session
-    cart = request.session['shopping_cart']
+    cart = request.session.get('shopping_cart', {})
 
     total = 0
     for k, v in cart.items():

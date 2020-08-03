@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, HttpResponse, reverse
 from django.contrib.sites.models import Site
+from django.views.decorators.csrf import csrf_exempt
 
 # import in the settings
 from django.conf import settings
@@ -23,7 +24,9 @@ def checkout(request):
     # create our line items
     line_items = []
 
+    # go through each book in the shopping cart
     for book_id, book in cart.items():
+        # retrieve the book by its id from the database
         book_model = get_object_or_404(Book, pk=book_id)
 
         # create line item
@@ -43,7 +46,7 @@ def checkout(request):
     # get the domain name
     domain = current_site.domain
 
-    # create a session to represent the current transaction
+    # create a payment session to represent the current transaction
     session = stripe.checkout.Session.create(
         payment_method_types=["card"],  # take credit cards
         line_items=line_items,
@@ -63,3 +66,44 @@ def checkout_success(request):
 
 def checkout_cancelled(request):
     return HttpResponse("checkout cancelled")
+
+
+@csrf_exempt
+def payment_completed(request):
+    # retrieve the information from the payment (also known as the payload)
+    # this will contains the information sent out, like the line items
+    payload = request.body
+
+    # verify that the payment is legit
+    sig_header = request.META["HTTP_STRIPE_SIGNATURE"]
+
+    endpoint_secret = "whsec_zy5aR45jWes3CqkknYltzOhv77UiKWW0"
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, endpoint_secret)
+    except ValueError:
+        # invalid payload
+        # status 400 means forbidden (this means someone tried to s
+        # poof a stripe payemnt)
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError:
+        # invalid signature
+        return HttpResponse(status=400)
+
+    # handle the payment proper
+    if event["type"] == "checkout.session.completed":
+        # retrieve the session data
+        session = event['data']['object']
+
+        # do whatever I want with the session
+        handle_payment(session)
+
+    # status 200 means everything's ok
+    return HttpResponse(status=200)
+
+
+def handle_payment(session):
+    print(session)
+    pass
