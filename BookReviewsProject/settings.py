@@ -28,7 +28,7 @@ SECRET_KEY = '%a%-pfihvg+j=#wx-3uhdiu$xct2yw)@)*l6j2vj1(42azp&2r'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["*", "akzy-django.herokuapp.com"]
 
 
 # Application definition
@@ -63,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'BookReviewsProject.urls'
@@ -178,6 +179,8 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static")
 ]
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
